@@ -1,121 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import { Send, Loader2, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Sparkles, Brain, ArrowRight, ArrowLeft, Globe, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const QUESTIONS = [
+  { id: 'why', label: 'Why are you considering this decision?' },
+  { id: 'fear', label: 'What is your biggest fear regarding this?' },
+  { id: 'outcome', label: 'What outcome do you actually want?' },
+  { id: 'constraints', label: 'What constraints do you have? (money, time, family, etc.)' },
+  { id: 'urgency', label: 'How urgent is this decision? (1–5 scale)' }
+];
 
 export default function DecisionInput({ onGenerate, loading }) {
-  const [input, setInput] = useState('');
-  const [thinkingMessage, setThinkingMessage] = useState('Thinking like a strategist...');
+  const [step, setStep] = useState(0); // 0 = Initial Decision, 1-5 = Questions
+  const [decision, setDecision] = useState('');
+  const [answers, setAnswers] = useState({
+    why: '',
+    fear: '',
+    outcome: '',
+    constraints: '',
+    urgency: ''
+  });
+  const [config, setConfig] = useState({
+    language: 'English',
+    tone: 'Mentor Mode'
+  });
 
-  const messages = [
-    'Analyzing edge cases...',
-    'Consulting frameworks...',
-    'Evaluating risk vectors...',
-    'Refining persona insights...',
-    'Calculating opportunity cost...'
-  ];
-
-  useEffect(() => {
-    if (loading) {
-      let i = 0;
-      const interval = setInterval(() => {
-        setThinkingMessage(messages[i % messages.length]);
-        i++;
-      }, 800);
-      return () => clearInterval(interval);
-    }
-  }, [loading]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (input.trim() && !loading) {
-      onGenerate(input);
+  const handleNext = () => {
+    if (step < QUESTIONS.length) {
+      setStep(step + 1);
+    } else {
+      onGenerate(decision, answers, config);
     }
   };
 
+  const handleBack = () => {
+    if (step > 0) setStep(step - 1);
+  };
+
+  const updateAnswer = (val) => {
+    if (step === 0) {
+      setDecision(val);
+    } else {
+      const qId = QUESTIONS[step - 1].id;
+      setAnswers(prev => ({ ...prev, [qId]: val }));
+    }
+  };
+
+  const currentVal = step === 0 ? decision : answers[QUESTIONS[step - 1].id];
+  const progress = (step / QUESTIONS.length) * 100;
+
   return (
-    <div className="input-section fade-in" style={{ maxWidth: '800px', margin: '0 auto 4rem auto' }}>
-      <motion.form 
-        onSubmit={handleSubmit} 
-        style={{ position: 'relative' }}
-        whileHover={{ scale: 1.01 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div style={{
-          position: 'absolute',
-          top: '-2px',
-          left: '-2px',
-          right: '-2px',
-          bottom: '-2px',
-          background: 'linear-gradient(to right, var(--accent), var(--accent-secondary))',
-          borderRadius: '22px',
-          zIndex: -1,
-          opacity: 0.3,
-          filter: 'blur(10px)'
-        }} />
-        
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Enter your decision (e.g., Should I quit my job to start a startup?)"
-          disabled={loading}
-          style={{
-            width: '100%',
-            minHeight: '160px',
-            backgroundColor: 'var(--bg-secondary)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid var(--glass-border)',
-            borderBottom: '2px solid var(--accent)',
-            borderRadius: '20px',
-            color: 'white',
-            padding: '2rem',
-            fontSize: '1.25rem',
-            fontWeight: '500',
-            outline: 'none',
-            resize: 'none',
-            transition: 'var(--transition)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-            fontFamily: 'inherit'
-          }}
-        />
-        
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          style={{
-            position: 'absolute',
-            bottom: '20px',
-            right: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.6rem',
-            backgroundColor: 'var(--accent)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '0.75rem 1.5rem',
-            fontWeight: '700',
-            cursor: (loading || !input.trim()) ? 'not-allowed' : 'pointer',
-            opacity: (loading || !input.trim()) ? 0.6 : 1,
-            transition: 'var(--transition)',
-            boxShadow: '0 4px 15px var(--accent-glow)'
-          }}
-        >
-          {loading ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
-          {loading ? 'Analyzing...' : 'Generate Analysis'}
-        </button>
-      </motion.form>
-      
-      {loading && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          style={{ marginTop: '1.5rem', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <p style={{ color: 'var(--accent)', fontSize: '1rem', fontWeight: '600', animation: 'pulse 1.5s infinite' }}>
-            {thinkingMessage}
-          </p>
-        </motion.div>
-      )}
-    </div>
+    <motion.div 
+      className="glow-card" 
+      style={{ maxWidth: '800px', margin: '0 auto 4rem auto' }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <div className="glow-card-inner">
+        {/* Config Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {['English', 'Hindi', 'Hinglish'].map(lang => (
+              <button 
+                key={lang}
+                onClick={() => setConfig(prev => ({ ...prev, language: lang }))}
+                style={{ 
+                  padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700',
+                  background: config.language === lang ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--glass-border)', color: 'white', cursor: 'pointer', transition: 'var(--transition)'
+                }}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {['Direct Mode', 'Mentor Mode'].map(tone => (
+              <button 
+                key={tone}
+                onClick={() => setConfig(prev => ({ ...prev, tone: tone }))}
+                style={{ 
+                  padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700',
+                  background: config.tone === tone ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--glass-border)', color: 'white', cursor: 'pointer', transition: 'var(--transition)'
+                }}
+              >
+                {tone}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Question Header */}
+        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ padding: '0.5rem', background: 'var(--accent-glow)', borderRadius: '10px' }}>
+            <Brain size={20} color="var(--accent)" />
+          </div>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', opacity: 0.9 }}>
+            {step === 0 ? "What's the decision you're facing?" : QUESTIONS[step - 1].label}
+          </h3>
+        </div>
+
+        {/* Input Area */}
+        <div style={{ position: 'relative' }}>
+          <textarea 
+            value={currentVal}
+            onChange={(e) => updateAnswer(e.target.value)}
+            placeholder={step === 0 ? "E.g., Should I quit my job?" : "Type your answer here..."}
+            style={{ 
+              width: '100%', minHeight: '120px', background: 'rgba(255,255,255,0.02)', 
+              border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '1.25rem',
+              color: 'white', fontSize: '1.05rem', fontFamily: 'inherit', resize: 'none',
+              outline: 'none', transition: 'border-color 0.3s'
+            }}
+          />
+          
+          {/* Progress Bar */}
+          {step > 0 && (
+            <div style={{ position: 'absolute', bottom: '-20px', left: 0, width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px' }}>
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                style={{ height: '100%', background: 'var(--accent)', borderRadius: '2px', boxShadow: '0 0 10px var(--accent-glow)' }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2.5rem' }}>
+          {step > 0 ? (
+            <button 
+              onClick={handleBack}
+              style={{ padding: '0.75rem 1.5rem', background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <ArrowLeft size={18} /> Back
+            </button>
+          ) : <div />}
+
+          <button 
+            disabled={!currentVal || loading}
+            onClick={handleNext}
+            style={{ 
+              background: 'var(--accent)', padding: '0.8rem 2rem', borderRadius: '14px', border: 'none',
+              color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem',
+              boxShadow: '0 10px 20px var(--accent-glow)', opacity: currentVal ? 1 : 0.5, transition: 'var(--transition)'
+            }}
+          >
+            {loading ? "Thinking..." : step === QUESTIONS.length ? "Generate Analysis" : "Next Step"}
+            {!loading && <ArrowRight size={18} />}
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 }

@@ -10,27 +10,32 @@ import {
   Zap, 
   ShieldAlert, 
   MessageSquareQuote,
-  ChevronRight
+  Activity,
+  AlertOctagon,
+  RefreshCcw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function AnalysisResult({ result }) {
+export default function AnalysisResult({ result, onRefine }) {
   const [copied, setCopied] = useState(false);
   if (!result) return null;
 
-  const copyToClipboard = () => {
-    const text = JSON.stringify(result, null, 2);
+  const copyAnalysis = () => {
+    const text = `
+    COUNSELOR INSIGHT:
+    ${result.counselorInsight}
+
+    DECISION ANALYSIS:
+    Goal: ${result.analysis.goal}
+    Final Decision: ${result.analysis.finalDecision}
+    Execution Plan: ${result.analysis.executionPlan.join(', ')}
+
+    REALITY CHECK:
+    ${result.realityCheck}
+    `;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
   };
 
   const itemVariants = {
@@ -41,145 +46,110 @@ export default function AnalysisResult({ result }) {
   return (
     <motion.div 
       className="analysis-result" 
-      variants={containerVariants}
       initial="hidden"
       animate="show"
       style={{ display: 'grid', gap: '2.5rem', marginBottom: '6rem' }}
     >
-      {/* Header & Copy Utility */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', letterSpacing: '-0.02em' }}>Strategic Mentor Analysis</h2>
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={copyToClipboard}
-          style={{ 
-            display: 'flex', alignItems: 'center', gap: '0.5rem', 
-            background: copied ? 'var(--accent)' : 'rgba(255,255,255,0.05)', 
-            border: '1px solid var(--glass-border)', borderRadius: '12px',
-            color: copied ? 'white' : 'var(--text-secondary)', padding: '0.6rem 1.25rem', cursor: 'pointer',
-            fontSize: '0.9rem', fontWeight: '600', transition: 'var(--transition)'
-          }}
-        >
-          {copied ? <Check size={18} /> : <Clipboard size={18} />}
-          {copied ? 'Copied' : 'Copy Analysis'}
-        </motion.button>
-      </div>
-
-      {/* 1. Understand the Situation */}
-      <motion.div className="glow-card" variants={itemVariants}>
-        <div className="glow-card-inner">
-          <SectionHeader icon={<Brain size={20} />} title="Understand the Situation" />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: '1.7', fontWeight: '500' }}>{result.understand}</p>
-        </div>
-      </motion.div>
-
-      {/* 2. What Matters Most */}
-      <motion.div className="glow-card" variants={itemVariants}>
-        <div className="glow-card-inner">
-          <SectionHeader icon={<Target size={20} />} title="What Matters Most" />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-            {result.priority.map((p, i) => (
-              <span key={i} style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '0.6rem 1.2rem', borderRadius: '12px', fontSize: '0.95rem', border: '1px solid var(--border)', fontWeight: '600', color: 'var(--text-primary)' }}>
-                {p}
-              </span>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* 3. Options Breakdown */}
+      {/* SECTION 1: Counselor Insight */}
       <motion.div className="glow-card" variants={itemVariants} style={{ borderLeft: '4px solid var(--accent)' }}>
-        <div className="glow-card-inner">
-          <SectionHeader icon={<Scale size={20} />} title="Options Breakdown" />
-          <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-            {result.options.map((opt, i) => (
-              <div key={i} style={{ padding: '1.5rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                <div style={{ fontWeight: '800', marginBottom: '0.75rem', color: 'var(--accent)', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{opt.title}</div>
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '1rem', fontWeight: '500' }}>{opt.description}</p>
-                <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.9rem' }}>
-                  <div><span style={{ color: '#10b981', fontWeight: '800' }}>PROS:</span> <span style={{ color: 'var(--text-secondary)' }}>{opt.pros.join(', ')}</span></div>
-                  <div><span style={{ color: '#ef4444', fontWeight: '800' }}>CONS:</span> <span style={{ color: 'var(--text-secondary)' }}>{opt.cons.join(', ')}</span></div>
-                  <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: 'var(--text-secondary)' }}>"Best when: {opt.bestWhen}"</div>
-                </div>
-              </div>
-            ))}
+        <div className="glow-card-inner" style={{ background: 'linear-gradient(135deg, rgba(22,22,22,0.9) 0%, var(--accent-glow) 100%)' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', opacity: 0.8 }}>
+            <Activity size={18} />
+            <span style={{ fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Section 1: Counselor Insight</span>
           </div>
+          <p style={{ fontSize: '1.25rem', fontWeight: '600', fontStyle: 'italic', lineHeight: '1.6', color: 'white' }}>
+            "{result.counselorInsight}"
+          </p>
         </div>
       </motion.div>
 
-      {/* 4. Thinking Framework */}
+      {/* SECTION 2: Decision Analysis */}
       <motion.div className="glow-card" variants={itemVariants}>
         <div className="glow-card-inner">
-          <SectionHeader icon={<Puzzle size={20} />} title="Thinking Framework" />
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '16px' }}>
-            <h4 style={{ color: 'var(--accent)', fontWeight: '800', marginBottom: '0.5rem' }}>{result.framework.title}</h4>
-            <p style={{ fontWeight: '600', marginBottom: '1rem' }}>{result.framework.explanation}</p>
-            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', borderLeft: '2px solid var(--accent)', paddingLeft: '1rem' }}>{result.framework.application}</p>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '2rem', opacity: 0.6 }}>
+            <Puzzle size={18} />
+            <span style={{ fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Section 2: Strategic Analysis</span>
           </div>
-        </div>
-      </motion.div>
 
-      {/* 5. Recommended Action */}
-      <motion.div className="glow-card" variants={itemVariants} style={{ border: '2px solid var(--accent)' }}>
-        <div className="glow-card-inner" style={{ background: 'linear-gradient(135deg, rgba(22,22,22,0.95) 0%, var(--accent-glow) 100%)' }}>
-          <SectionHeader icon={<Award size={22} />} title="Recommended Action" />
-          <h4 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'white', marginBottom: '1rem' }}>{result.verdict.action}</h4>
-          <p style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '1.5rem' }}>{result.verdict.reason}</p>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>
-            <strong>Trade-offs:</strong> {result.verdict.tradeoffs}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* 6. Execution Plan */}
-      <motion.div className="glow-card" variants={itemVariants}>
-        <div className="glow-card-inner">
-          <SectionHeader icon={<Zap size={20} />} title="Execution Plan" />
-          <div style={{ display: 'grid', gap: '1.25rem' }}>
-            {result.execution.map((step, i) => (
-              <div key={i} style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-                <div style={{ background: 'var(--accent)', color: 'white', borderRadius: '50%', width: '28px', height: '28px', minWidth: '28px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>{i+1}</div>
-                <p style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: '600' }}>{step}</p>
+          <div style={{ display: 'grid', gap: '2rem' }}>
+            {/* Goal & Risks */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+              <div>
+                <Label icon={<Target size={14} />} text="Goal Identified" />
+                <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{result.analysis.goal}</p>
               </div>
-            ))}
+              <div>
+                <Label icon={<ShieldAlert size={14} />} text="Key Risks" />
+                <ul style={{ listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {result.analysis.risks.map((r, i) => (
+                    <li key={i} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '700', border: '1px solid rgba(239, 68, 68, 0.2)' }}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* SWOT Placeholder / Summary */}
+            <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border)' }}>
+              <Label icon={<Brain size={14} />} text="SWOT Strategic Summary" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div><span style={{ color: '#10b981', fontWeight: '800', fontSize: '0.75rem' }}>STRENGTHS:</span> <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>{result.analysis.swot.strengths.join(', ')}</p></div>
+                <div><span style={{ color: '#8b5cf6', fontWeight: '800', fontSize: '0.75rem' }}>OPPORTUNITIES:</span> <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>{result.analysis.swot.opportunities.join(', ')}</p></div>
+              </div>
+            </div>
+
+            {/* Final Decision */}
+            <div style={{ padding: '2rem', background: 'var(--bg-primary)', borderRadius: '20px', border: '2px solid var(--accent)', textAlign: 'center', boxShadow: '0 20px 40px var(--accent-glow)' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--accent)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '1rem' }}>Final Decision</div>
+              <h4 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'white', lineHeight: '1.2' }}>{result.analysis.finalDecision}</h4>
+            </div>
+
+            {/* Execution Plan */}
+            <div>
+              <Label icon={<Zap size={14} />} text="Execution Plan (5 Steps)" />
+              <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
+                {result.analysis.executionPlan.map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ width: '24px', height: '24px', background: 'var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900' }}>{i+1}</div>
+                    <p style={{ fontWeight: '600', opacity: 0.9 }}>{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* 7. Reality Check */}
-      <motion.div className="glow-card" variants={itemVariants} style={{ borderLeft: '4px solid #ef4444' }}>
-        <div className="glow-card-inner">
-          <SectionHeader icon={<ShieldAlert size={20} color="#ef4444" />} title="Reality Check" />
-          <ul style={{ listStyle: 'none', display: 'grid', gap: '0.75rem' }}>
-            {result.awareness.map((a, i) => (
-              <li key={i} style={{ display: 'flex', gap: '0.75rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
-                <ChevronRight size={18} color="#ef4444" style={{ marginTop: '0.2rem' }} />
-                {a}
-              </li>
-            ))}
-          </ul>
+      {/* Reality Check */}
+      <motion.div className="glow-card" variants={itemVariants} style={{ border: '1px solid #ef4444' }}>
+        <div className="glow-card-inner" style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <AlertOctagon color="#ef4444" size={24} />
+            <div>
+              <div style={{ color: '#ef4444', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Reality Check (Brutally Honest)</div>
+              <p style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.25rem' }}>{result.realityCheck}</p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* 8. One-Line Summary */}
-      <motion.div variants={itemVariants} style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '1rem', padding: '1.5rem 3rem', background: 'var(--bg-secondary)', borderRadius: '100px', border: '1px solid var(--accent)' }}>
-          <MessageSquareQuote size={20} color="var(--accent)" />
-          <p style={{ fontSize: '1.25rem', fontWeight: '800', fontStyle: 'italic', letterSpacing: '-0.02em' }}>{result.takeaway}</p>
-        </div>
-      </motion.div>
+      {/* Actions */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem' }}>
+        <button onClick={onRefine} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', padding: '1rem 2rem', borderRadius: '100px', color: 'white', fontWeight: '800', cursor: 'pointer' }}>
+          <RefreshCcw size={18} /> Refine this Decision
+        </button>
+        <button onClick={copyAnalysis} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--accent)', border: 'none', padding: '1rem 2rem', borderRadius: '100px', color: 'white', fontWeight: '800', cursor: 'pointer', boxShadow: '0 10px 20px var(--accent-glow)' }}>
+          {copied ? <Check size={18} /> : <Clipboard size={18} />} {copied ? "Copied" : "Copy Analysis"}
+        </button>
+      </div>
     </motion.div>
   );
 }
 
-function SectionHeader({ icon, title }) {
+function Label({ icon, text }) {
   return (
-    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
-      <div style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-        {icon}
-      </div>
-      <h3 style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em', textTransform: 'uppercase', opacity: 0.8 }}>{title}</h3>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+      {icon}
+      <span style={{ fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{text}</span>
     </div>
   );
 }
